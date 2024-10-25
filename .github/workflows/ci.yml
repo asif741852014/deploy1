@@ -1,0 +1,34 @@
+# .github/workflows/deploy-to-heroku.yml
+name: Deploy to Heroku
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Fetch all history to avoid shallow clone issues
+
+      - name: Set up Heroku CLI
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Authenticate with Heroku
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          echo "machine git.heroku.com login heroku password $HEROKU_API_KEY" > ~/.netrc
+
+      - name: Add Heroku remote
+        run: |
+          git remote add heroku https://git.heroku.com/asifsapp.git
+
+      - name: Push to Heroku
+        run: git push heroku main
