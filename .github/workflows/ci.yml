@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  deployments: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,8 +17,21 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Fetch all history to avoid shallow clone issues
+
+      - name: Create a Deployment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -X POST \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/deployments \
+          -d '{
+                "ref": "main",
+                "environment": "production",
+                "description": "Creating a deployment via workflow",
+                "required_contexts": []
+              }'
 
       - name: Set up Heroku CLI
         run: |
@@ -28,7 +45,7 @@ jobs:
 
       - name: Add Heroku remote
         run: |
-          git remote add heroku https://git.heroku.com/asifsapp.git
+          git remote add heroku https://git.heroku.com/your-app-name.git
 
       - name: Push to Heroku
         run: git push heroku main
